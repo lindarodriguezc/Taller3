@@ -14,35 +14,47 @@ app.add_middleware(
 )
 
 #os.environ para despliegue. Descomente cuando ya probó todo local.
-#client = MongoClient(os.environ["MONGO_URI"])
+client = MongoClient(os.environ["MONGO_URI"])
 # TODO: conectarse al cluster Admonsis  
-# client = MongoClient("mongodb://<usuario>:<contraseña>@157.253.236.88:8087")
 
-client = MongoClient("")
+
+# client = MongoClient("")
 # TODO: conectarse a la base de datos Admonsis  
 # db = client["ISIS*******"]
-db = client[""]
-
+db = client["ISIS2304E33202610"]
 
 @app.get("/")
 def inicio():
-    return {"estado": "API funcionando correctamente"}
+    return {"estado": "API Linda funcionando correctamente"}
 
 @app.get('/bares/{bar_id}/comentarios')
 def get_comentarios(bar_id: int):
-    comentarios = None  # TODO: completar
+    comentarios = list(db["comentarios"].find(
+        {"bar_id": bar_id},
+        {"_id": 0}
+    ))
     return comentarios
 
 @app.post('/bares/{bar_id}/comentarios')
 def post_comentario(bar_id: int, datos: dict):
     datos['bar_id'] = bar_id
     datos['fecha']  = datetime.now().isoformat()
-    # TODO: completar
+    db["comentarios"].insert_one(datos)
     return {'mensaje': 'Comentario guardado'}
 
-# TODO: implementar GET /bares/{bar_id}/eventos
-# Debe retornar todos los eventos del bar desde la colección 'eventos'
+# GET - retornar eventos de un bar
+@app.get('/bares/{bar_id}/eventos')
+def get_eventos(bar_id: int):
+    eventos = list(db["eventos"].find(
+        {"bar_id": bar_id},
+        {"_id": 0}
+    ))
+    return eventos
 
-# TODO: implementar POST /bares/{bar_id}/eventos  
-# Debe insertar el evento en la colección 'eventos'
-# Recuerde agregar bar_id y fecha_creacion al documento antes de insertar
+# POST - registrar un evento
+@app.post('/bares/{bar_id}/eventos')
+def post_evento(bar_id: int, datos: dict):
+    datos['bar_id'] = bar_id
+    datos['fecha_creacion'] = datetime.now().isoformat()
+    db["eventos"].insert_one(datos)
+    return {'mensaje': 'Evento registrado'}
